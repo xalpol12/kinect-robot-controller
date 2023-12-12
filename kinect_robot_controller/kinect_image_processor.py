@@ -5,6 +5,7 @@ from sensor_msgs.msg import Image
 import cv2
 import numpy as np
 
+DEPTH_DETECTION_THRESHOLD = 20
 
 class KinectImageProcessor(Node):
     def __init__(self):
@@ -13,12 +14,14 @@ class KinectImageProcessor(Node):
         self.rgbd_subscription = self.create_subscription(Image, "/rgbd_image", self.rgbd_callback,10)
         self.rgb_image = np.array(0)
         self.depth_image = np.array(0)
+        self.threshed_depth_image = np.array(0)
 
     def rgbd_callback(self, rgbd_image: Image):
         self.rgb_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 0:3]
         self.depth_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 3]
+        ret, self.threshed_depth_image = cv2.threshold(self.depth_image, DEPTH_DETECTION_THRESHOLD, 255, cv2.THRESH_BINARY_INV)
         cv2.imshow("rgb", self.rgb_image)
-        cv2.imshow("depth", self.depth_image)
+        cv2.imshow("depth", self.threshed_depth_image)
         cv2.waitKey(10)
 
 
