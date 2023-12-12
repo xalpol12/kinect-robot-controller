@@ -12,9 +12,9 @@ class RgbdImagePublisher(Node):
         self.declare_parameter('window_width', 640)
         self.declare_parameter('window_height', 480)
         self.window_width = self.get_parameter('window_width').value
-        self.window_height = self.get_parameter('window_')
+        self.window_height = self.get_parameter('window_height').value
         self.br = CvBridge()
-        self.rgbd_image = np.zeros((self.window_width, self.window_height, 4))
+        self.rgbd_image = np.zeros((self.window_height, self.window_width, 4))
         self.rgb_subscription = self.create_subscription(Image, '/image_raw', self.rgb_callback, 10)
         # self.depth_subscription = self.create_subscription(Image, '/depth/image_raw', self.depth_callback, 10)
 

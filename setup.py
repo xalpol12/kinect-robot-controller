@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'rgbd_image_publisher = kinect_robot_controller.rgbd_image_publisher:main',
         ],
     },
 )
