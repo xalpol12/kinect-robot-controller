@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'rgbd_image_publisher = kinect_robot_controller.rgbd_image_publisher:main',
+            'kinect_image_processor = kinect_robot_controller.kinect_image_processor:main',
         ],
     },
 )

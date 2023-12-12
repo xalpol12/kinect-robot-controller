@@ -23,6 +23,8 @@ class RgbdImagePublisher(Node):
         self.publisher_ = self.create_publisher(Image, 'rgbd_image', 10)
         self.timer = self.create_timer(0.04, self.publish_rgbd_image)
 
+        self.get_logger().info("RGB image and depth image acquisition started")
+
     def rgb_callback(self, rgb_image):
         rgb_frame = self.br.imgmsg_to_cv2(rgb_image, "bgr8")
         width = rgb_image.width
