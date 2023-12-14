@@ -39,23 +39,49 @@ class KinectImageProcessor(Node):
         self.depth_image = np.array(0)
         self.thresh_away = np.array(0)
         self.threshed_depth_image = np.array(0)
+        self.cnts = []
+        self.x, self.y = (0, 0)
+        self.hand_size_scaling = 0.001
+        self.image_queue = np.zeros((1 , 1, 3))
 
         self.rgb_window = Window("rgb")
         self.depth_window = Window("threshed_depth")
-        # self.depth_window.create_trackbar("threshold", MIN_THRESHOLD_TRACKBAR_VALUE, MAX_THRESHOLD_TRACKBAR_VALUE, on_detection_threshold_change)
+        self.depth_window.create_trackbar("threshold", MIN_THRESHOLD_TRACKBAR_VALUE, MAX_THRESHOLD_TRACKBAR_VALUE, on_detection_threshold_change)
 
     def rgbd_callback(self, rgbd_image: Image):
-        self.rgb_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 0:3]
-        self.depth_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 3]
-        self.depth_image = cv2.blur(self.depth_image, (7, 7))
-        _, thresh_away = cv2.threshold(self.depth_image, DEPTH_DETECTION_THRESHOLD, 255, cv2.THRESH_BINARY_INV)
-        _, thresh_close = cv2.threshold(self.depth_image, 2, 255, cv2.THRESH_BINARY)
-        self.threshed_depth_image = cv2.bitwise_xor(thresh_close, thresh_away)
+        self.load_parameters(rgbd_image)
+        self.initial_in_range_threshing(rgbd_image)
+        cnts, _ = cv2.findContours(self.threshed_depth_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        self.cnts = []
+        for cnt in cnts:
+            area = cv2.contourArea(cnt)
+            if area > self.x * self.y * self.hand_size_scaling:
+                self.cnts.append(cnt)
+        cv2.drawContours(self.rgb_image, self.cnts, -1, (255, 0, 0), 3)
         self.update_windows()
+
+    def load_parameters(self, image: Image) -> None:
+        if self.x == 0:
+            self.x = image.width
+            self.y = image.height
+            self.image_queue((self.x, self.y, 3))
+
+    def initial_in_range_threshing(self, rgbd_image: Image):
+        self.rgb_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 0:3]
+        self.rgb_image = cv2.UMat(self.rgb_image)
+        self.depth_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 3]
+        self.threshed_depth_image = cv2.inRange(self.depth_image, 2, DEPTH_DETECTION_THRESHOLD)
+        self.threshed_depth_image = cv2.dilate(self.threshed_depth_image, (13, 13))
+
+        # self.threshed_depth_image = cv2.morphologyEx(self.threshed_depth_image, cv2.MORPH_CLOSE, (7, 7))
 
     def update_windows(self):
         self.depth_window.update_image(self.threshed_depth_image)
         self.rgb_window.update_image(self.rgb_image)
+
+    def push_image_queue(self, frame: ndarray):
+        
+
 
 
 def main(args=None):
