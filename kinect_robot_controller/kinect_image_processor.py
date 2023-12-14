@@ -4,6 +4,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 import cv2
 import numpy as np
+import numpy.typing as npt
 
 MIN_THRESHOLD_TRACKBAR_VALUE = 0
 MAX_THRESHOLD_TRACKBAR_VALUE = 200
@@ -42,7 +43,7 @@ class KinectImageProcessor(Node):
         self.cnts = []
         self.x, self.y = (0, 0)
         self.hand_size_scaling = 0.001
-        self.image_queue = np.zeros((1 , 1, 3))
+        self.image_queue = np.zeros((1, 1, 3))
 
         self.rgb_window = Window("rgb")
         self.depth_window = Window("threshed_depth")
@@ -64,7 +65,7 @@ class KinectImageProcessor(Node):
         if self.x == 0:
             self.x = image.width
             self.y = image.height
-            self.image_queue((self.x, self.y, 3))
+            self.image_queue = np.zeros((self.y, self.x, 3))
 
     def initial_in_range_threshing(self, rgbd_image: Image):
         self.rgb_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 0:3]
@@ -72,17 +73,17 @@ class KinectImageProcessor(Node):
         self.depth_image = self.cv_bridge.imgmsg_to_cv2(rgbd_image, 'rgba8')[:, :, 3]
         self.threshed_depth_image = cv2.inRange(self.depth_image, 2, DEPTH_DETECTION_THRESHOLD)
         self.threshed_depth_image = cv2.dilate(self.threshed_depth_image, (13, 13))
-
+        self.push_image_queue(self.threshed_depth_image)
+        self.threshed_depth_image = np.min(self.image_queue, axis=2).astype(np.uint8)
         # self.threshed_depth_image = cv2.morphologyEx(self.threshed_depth_image, cv2.MORPH_CLOSE, (7, 7))
 
     def update_windows(self):
         self.depth_window.update_image(self.threshed_depth_image)
         self.rgb_window.update_image(self.rgb_image)
 
-    def push_image_queue(self, frame: ndarray):
-        
-
-
+    def push_image_queue(self, frame: npt.NDArray[any]):
+        self.image_queue[:, :, 1:] = self.image_queue[:, :, 0:-1]
+        self.image_queue[:, :, 0] = frame
 
 def main(args=None):
     rclpy.init(args=args)
