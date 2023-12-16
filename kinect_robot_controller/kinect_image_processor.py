@@ -40,10 +40,11 @@ class KinectImageProcessor(Node):
         self.depth_image = np.array(0)
         self.thresh_away = np.array(0)
         self.threshed_depth_image = np.array(0)
+        self.masked_depth_image = np.array(0)
         self.cnts = []
         self.x, self.y = (0, 0)
         self.hand_size_scaling = 0.001
-        self.image_queue = np.zeros((1, 1, 3))
+        self.image_queue = np.zeros((1, 1, 2))
 
         self.rgb_window = Window("rgb")
         self.depth_window = Window("threshed_depth")
@@ -75,10 +76,13 @@ class KinectImageProcessor(Node):
         self.threshed_depth_image = cv2.dilate(self.threshed_depth_image, (13, 13))
         self.push_image_queue(self.threshed_depth_image)
         self.threshed_depth_image = np.min(self.image_queue, axis=2).astype(np.uint8)
-        # self.threshed_depth_image = cv2.morphologyEx(self.threshed_depth_image, cv2.MORPH_CLOSE, (7, 7))
+        self.masked_depth_image = np.where(self.threshed_depth_image, self.depth_image, 255)
+        min_index = np.unravel_index(np.argmin(self.masked_depth_image), self.masked_depth_image.shape)
+        print(min_index)
+
 
     def update_windows(self):
-        self.depth_window.update_image(self.threshed_depth_image)
+        self.depth_window.update_image(self.masked_depth_image)
         self.rgb_window.update_image(self.rgb_image)
 
     def push_image_queue(self, frame: npt.NDArray[any]):
