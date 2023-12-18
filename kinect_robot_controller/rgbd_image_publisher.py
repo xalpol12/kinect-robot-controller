@@ -25,20 +25,19 @@ class RgbdImagePublisher(Node):
 
         self.get_logger().info("RGB image and depth image acquisition started")
 
+
     def rgb_callback(self, rgb_image):
         rgb_frame = self.br.imgmsg_to_cv2(rgb_image, "bgr8")
-        width = rgb_image.width
-        height = rgb_image.height
-        rgb_frame = cv2.resize(rgb_frame, (width, height))
+        rgb_frame = cv2.resize(rgb_frame, (self.window_width, self.window_height))
+        rgb_frame = np.flip(rgb_frame, 1)
         self.rgbd_image[:, :, 0:3] = rgb_frame
         # cv2.imshow("image", rgb_frame)
         # cv2.waitKey(1)
 
     def depth_callback(self, depth_image):
         depth_frame = self.br.imgmsg_to_cv2(depth_image, "16UC1")
-        width = depth_image.width
-        height = depth_image.height
-        depth_frame = cv2.resize(depth_frame, (width, height))
+        depth_frame = cv2.resize(depth_frame, (self.window_width, self.window_height))
+        depth_frame = np.flip(depth_frame, 1)
         cv_image_array = np.array(depth_frame, dtype=np.dtype('f8'))
         cv_image_norm = cv2.normalize(cv_image_array, None, 0, 255, cv2.NORM_MINMAX)
         cv_image_norm = cv_image_norm.astype(np.uint8)
@@ -46,20 +45,10 @@ class RgbdImagePublisher(Node):
         # cv2.imshow("depth", cv_image_norm)
         # print(cv_image_norm)
         # cv2.waitKey(10)
+        self.publish_rgbd_image()
 
     def publish_rgbd_image(self):
-        msg = Image()
-        msg.width = self.window_width
-        msg.height = self.window_height
-
-        img_msg = self.br.cv2_to_imgmsg(self.rgbd_image, 'rgba8')
-
-        msg.header = img_msg.header
-        msg.encoding = img_msg.encoding
-        msg.is_bigendian = img_msg.is_bigendian
-        msg.step = img_msg.step
-        msg.data = img_msg.data
-
+        msg = self.br.cv2_to_imgmsg(self.rgbd_image, 'rgba8')
         self.publisher_.publish(msg)
         return msg
 
