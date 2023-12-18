@@ -6,7 +6,6 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 import cv2
 import numpy as np
-import numpy.typing as npt
 import json
 
 class RobotController(Node):
@@ -21,7 +20,7 @@ class RobotController(Node):
         self.rect_pos = {}
         self.x_window_size = 0
         self.y_window_size = 0
-        cv2.namedWindow('dupa')
+        cv2.namedWindow('rgb_image')
 
     def rgb_callback(self, image: Image):
         self.load_params(image)
@@ -29,14 +28,13 @@ class RobotController(Node):
         self.rgb_image = cv2.UMat(np.flip(self.rgb_image, 1))
         self.draw_sections(self.rgb_image)
 
-
     def rect_callback(self, rect_params: String):
         self.rect_pos = json.loads(rect_params.data)
         self.rect_pos['center'] = (int(self.rect_pos['x'] + self.rect_pos['w'] / 2), int(self.rect_pos['y'] + self.rect_pos['h'] / 2))
         self.draw_rect_and_center_point()
 
     def find_section(self):
-        print("a - mimimimi")
+        return
 
     def load_params(self, image: Image):
         if self.x_window_size == 0:
@@ -48,9 +46,9 @@ class RobotController(Node):
         y1 = self.rect_pos['y']
         x2 = x1 + self.rect_pos['w']
         y2 = y1 + self.rect_pos['h']
-        cv2.rectangle(self.rgb_image, (x1, y1), (x2, y2), (0, 255, 0), 3)
+        cv2.rectangle(self.rgb_image, (x1, y1), (x2, y2), (255, 0, 255), 3)
         cv2.circle(self.rgb_image, self.rect_pos['center'], 3, (0, 0, 255), cv2.FILLED)
-        cv2.imshow('dupa', self.rgb_image)
+        cv2.imshow('rgb_image', self.rgb_image)
         cv2.waitKey(10)
 
     def draw_sections(self, image):
