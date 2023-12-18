@@ -1,5 +1,3 @@
-from email.mime import image
-
 import rclpy
 from cv_bridge import CvBridge
 from rclpy.node import Node
@@ -10,7 +8,7 @@ import numpy.typing as npt
 
 MIN_THRESHOLD_TRACKBAR_VALUE = 0
 MAX_THRESHOLD_TRACKBAR_VALUE = 200
-DEPTH_DETECTION_THRESHOLD = 40
+DEPTH_DETECTION_THRESHOLD = 60
 HAND_MAX_DEPTH_DETECTION_THRESHOLD = 0
 
 def on_detection_threshold_change(value):
@@ -50,7 +48,7 @@ class KinectImageProcessor(Node):
         self.masked_depth_image = np.array(0)
         self.cnts = []
         self.x_window_size, self.y_window_size = (0, 0)
-        self.hand_size_scaling = 0.001
+        self.minimal_hand_scale = 0.001
         self.image_queue = np.zeros((1, 1, 2))
 
         self.rgb_window = Window("rgb")
@@ -61,6 +59,7 @@ class KinectImageProcessor(Node):
     def rgbd_callback(self, rgbd_image: Image):
         self.load_parameters(rgbd_image)
         self.initial_in_range_threshing(rgbd_image)
+        self.apply_masking()
         self.draw_contour(self.threshed_depth_image, self.rgb_image)
         self.update_windows()
 
@@ -69,7 +68,7 @@ class KinectImageProcessor(Node):
         self.cnts = []
         for cnt in cnts:
             area = cv2.contourArea(cnt)
-            if area > self.x_window_size * self.y_window_size * self.hand_size_scaling:
+            if area > self.x_window_size * self.y_window_size * self.minimal_hand_scale:
                 self.cnts.append(cnt)
         cv2.drawContours(image_to_draw_contours, self.cnts, -1, (255, 0, 0), 3)
 
@@ -86,6 +85,8 @@ class KinectImageProcessor(Node):
         self.threshed_depth_image = cv2.inRange(self.depth_image, 2, DEPTH_DETECTION_THRESHOLD)
         self.threshed_depth_image = cv2.dilate(self.threshed_depth_image, (13, 13))
         self.push_image_queue(self.threshed_depth_image)
+
+    def apply_masking(self):
         self.threshed_depth_image = np.min(self.image_queue, axis=2).astype(np.uint8)
         self.masked_depth_image = np.where(self.threshed_depth_image != 0, self.depth_image, np.ones_like(self.depth_image) * 255)
         self.masked_depth_image = np.where(self.masked_depth_image > 3, self.masked_depth_image, 255)
@@ -93,7 +94,7 @@ class KinectImageProcessor(Node):
         if min_value < 255:
             self.masked_depth_image = cv2.inRange(self.masked_depth_image, int(min_value), int(min_value + HAND_MAX_DEPTH_DETECTION_THRESHOLD))
 
-    def push_image_queue(self, frame: npt.NDArray[any]):
+    def push_image_queue(self, frame: npt.NDArray):
         self.image_queue[:, :, 1:] = self.image_queue[:, :, 0:-1]
         self.image_queue[:, :, 0] = frame
 
