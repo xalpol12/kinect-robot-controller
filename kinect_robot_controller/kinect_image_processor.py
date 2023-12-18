@@ -12,7 +12,7 @@ import json
 MIN_THRESHOLD_TRACKBAR_VALUE = 0
 MAX_THRESHOLD_TRACKBAR_VALUE = 200
 DEPTH_DETECTION_THRESHOLD = 60
-HAND_MAX_DEPTH_DETECTION_THRESHOLD = 0
+HAND_MAX_DEPTH_DETECTION_THRESHOLD = 3
 
 def on_detection_threshold_change(value):
     global DEPTH_DETECTION_THRESHOLD
@@ -56,16 +56,16 @@ class KinectImageProcessor(Node):
         self.image_queue = np.zeros((1, 1, 2))
         self.rect_params = {}
 
-        self.rgb_window = Window("rgb")
-        self.depth_window = Window("threshed_depth")
-        self.depth_window.create_trackbar("threshold", MIN_THRESHOLD_TRACKBAR_VALUE, MAX_THRESHOLD_TRACKBAR_VALUE, on_detection_threshold_change)
-        self.depth_window.create_trackbar("max_hand_detection_value", MIN_THRESHOLD_TRACKBAR_VALUE, 10, on_hand_max_depth_detection_threshold_change)
+        # self.rgb_window = Window("rgb")
+        # self.depth_window = Window("threshed_depth")
+        # self.depth_window.create_trackbar("threshold", MIN_THRESHOLD_TRACKBAR_VALUE, MAX_THRESHOLD_TRACKBAR_VALUE, on_detection_threshold_change)
+        # self.depth_window.create_trackbar("max_hand_detection_value", MIN_THRESHOLD_TRACKBAR_VALUE, 10, on_hand_max_depth_detection_threshold_change)
 
     def rgbd_callback(self, rgbd_image: Image):
         self.load_parameters(rgbd_image)
         self.initial_in_range_threshing(rgbd_image)
         self.apply_masking()
-        self.update_windows()
+        # self.update_windows()
 
     def load_parameters(self, image: Image) -> None:
         if self.x_window_size == 0:
@@ -107,18 +107,9 @@ class KinectImageProcessor(Node):
         cnts, _ = cv2.findContours(image_to_find_contours, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         self.largest_contour = max(cnts, key=cv2.contourArea)
 
-    def draw_contour(self, image_to_find_contours, image_to_draw_contours):
-        cnts, _ = cv2.findContours(image_to_find_contours, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        self.cnts = []
-        for cnt in cnts:
-            area = cv2.contourArea(cnt)
-            if area > self.x_window_size * self.y_window_size * self.minimal_hand_scale:
-                self.cnts.append(cnt)
-        cv2.drawContours(image_to_draw_contours, self.cnts, -1, (255, 0, 0), 3)
-
-    def update_windows(self):
-        self.depth_window.update_image(self.masked_depth_image)
-        self.rgb_window.update_image(self.rgb_image)
+    # def update_windows(self):
+    #     self.depth_window.update_image(self.masked_depth_image)
+    #     self.rgb_window.update_image(self.rgb_image)
 
     def json_creator(self, x, y, w, h) -> str:
         self.rect_params['x'] = x
