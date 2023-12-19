@@ -35,6 +35,7 @@ class RobotController(Node):
         self.y_window_size = 0
         self.sectors_boundaries = {}
         self.robot_control_msg = Twist()
+        self.highlighted_area = {"x1": 0, "x2": 0, "y1": 0, "y2": 0}
 
         self.get_logger().info("robot_controller node initialized")
         cv2.namedWindow('rgb_image')
@@ -78,6 +79,8 @@ class RobotController(Node):
         cv2.rectangle(image, (self.sectors_boundaries["x1"], 0), (self.sectors_boundaries["x2"], self.y_window_size), (0, 255, 0), 2)
         cv2.rectangle(image, (0, self.sectors_boundaries["y1"]), (self.x_window_size, self.sectors_boundaries["y2"]), (0, 255, 0), 2)
         cv2.rectangle(image, (0, 0, self.x_window_size, self.y_window_size), (0, 255, 0), 2)
+        cv2.rectangle(image, (self.highlighted_area["x1"], self.highlighted_area["y1"]),
+                      (self.highlighted_area["x2"], self.highlighted_area["y2"]), (0, 0, 255), 2)
 
     def check_boundaries(self, point: tuple, twist_msg: Twist, move_speed: float, rotation_speed: float) -> Twist:
         twist_msg = self.vertical_switch_case(point, twist_msg, move_speed)
@@ -87,19 +90,31 @@ class RobotController(Node):
     def vertical_switch_case(self, point: tuple, twist_msg: Twist, move_speed: float) -> Twist:
         if point[1] < self.sectors_boundaries["y1"]:
             twist_msg.linear.x = move_speed
+            self.highlighted_area['y1'] = 0
+            self.highlighted_area['y2'] = self.sectors_boundaries["y1"]
         elif point[1] > self.sectors_boundaries["y2"]:
             twist_msg.linear.x = - move_speed
+            self.highlighted_area['y1'] = self.sectors_boundaries["y2"]
+            self.highlighted_area['y2'] = self.y_window_size
         else:
             twist_msg.linear.x = 0.0
+            self.highlighted_area['y1'] = self.sectors_boundaries["y1"]
+            self.highlighted_area['y2'] = self.sectors_boundaries["y2"]
         return twist_msg
 
     def horizontal_switch_case(self, point: tuple, twist_msg: Twist, rotation_speed: float) -> Twist:
         if point[0] < self.sectors_boundaries["x1"]:
             twist_msg.angular.z = rotation_speed
+            self.highlighted_area['x1'] = 0
+            self.highlighted_area['x2'] = self.sectors_boundaries["x1"]
         elif point[0] > self.sectors_boundaries["x2"]:
             twist_msg.angular.z = - rotation_speed
+            self.highlighted_area['x1'] = self.sectors_boundaries["x2"]
+            self.highlighted_area['x2'] = self.x_window_size
         else:
             twist_msg.angular.z = 0.0
+            self.highlighted_area['x1'] = self.sectors_boundaries["x1"]
+            self.highlighted_area['x2'] = self.sectors_boundaries["x2"]
         return twist_msg
 
 
