@@ -55,6 +55,7 @@ class KinectImageProcessor(Node):
         self.minimal_hand_scale = 0.001
         self.image_queue = np.zeros((1, 1, 2))
         self.rect_params = {}
+        self.get_logger().info("kinect_image_processor node initialized")
 
         # self.rgb_window = Window("rgb")
         # self.depth_window = Window("threshed_depth")

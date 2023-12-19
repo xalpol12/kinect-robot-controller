@@ -25,7 +25,6 @@ class RgbdImagePublisher(Node):
 
         self.get_logger().info("RGB image and depth image acquisition started")
 
-
     def rgb_callback(self, rgb_image):
         rgb_frame = self.br.imgmsg_to_cv2(rgb_image, "bgr8")
         rgb_frame = cv2.resize(rgb_frame, (self.window_width, self.window_height))
