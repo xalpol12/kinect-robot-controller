@@ -3,9 +3,10 @@
 <package format="3">
   <name>kinect_robot_controller</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="xalpol12@gmail.com">dawidexpompa</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Image detection using Kinect v1 with OpenCV library</description>
+  <maintainer email="xalpol12@gmail.com">xalpol12</maintainer>
+  <maintainer>przWaw</maintainer>
+  <license>BSD</license>
 
   <depend>cv_bridge</depend>
   <depend>python3-opencv</depend>
