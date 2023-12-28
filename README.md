@@ -4,7 +4,9 @@
 
 ## Demo
 
-Full video can be viewed on [youtube]()
+![gif](.docs/demo-gif.gif)
+
+Full video can be viewed on [youtube](https://youtu.be/vXd0x3p9swo)
 
 Package processes received depth image in order to determine the nearest contour with the largest area between some distance in space (it's the depth section of about 0.3 to 0.6 meter from the sensor - anything outside of this section will be discarded from the potential contour check). Then the position of detected contour's center is calculated and displayed on the final image. Published robot control command is determined by the position of the calculated center in relation to the whole window. 
 
