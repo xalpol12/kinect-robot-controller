@@ -1,0 +1,32 @@
+# ros2 run kinect_ros2 kinect_ros2_node
+# ros2 run kinect_robot_controller rgbd_image_publisher
+# ros2 run kinect_robot_controller kinect_image_processor
+# ros2 run kinect_robot_controller robot_controller
+# ros2 run turtlesim
+
+launch:
+
+  - node:
+      pkg: "kinect_ros2"
+      exec: "kinect_ros2_node"
+      name: "kinect_camera"
+
+  - node:
+      pkg: "kinect_robot_controller"
+      exec: "rgbd_image_publisher"
+      name: "rgbd_publisher"
+
+  - node:
+      pkg: "kinect_robot_controller"
+      exec: "kinect_image_processor"
+      name: "image_processor"
+
+  - node:
+      pkg: "turtlesim"
+      exec: "turtlesim_node"
+      name: "sim"
+
+  - node:
+      pkg: "kinect_robot_controller"
+      exec: "robot_controller"
+      name: "turtlesim_robot_controller"
